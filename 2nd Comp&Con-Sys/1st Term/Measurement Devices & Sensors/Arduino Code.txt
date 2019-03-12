@@ -1,0 +1,90 @@
+int tempPin = A0;
+const int gas = A1;
+const int pir = 12;
+const int led1 = 2;
+const int led2 = 3;
+const int led3 = 4;
+const int led4 = 5;
+const int led5 = 6;
+const int led6 = 7;
+const int led7 = 8;
+const int led8 = 9;
+const int led9 = 10;
+const int led10 = 11;
+const int bled = 13;
+const int m1 = A2;
+const int m2 = A3;
+int tempval;
+int tempper;
+int gasval;
+int pirval;
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
+  pinMode(led4, OUTPUT);
+  pinMode(led5, OUTPUT);
+  pinMode(led6, OUTPUT);
+  pinMode(led7, OUTPUT);
+  pinMode(led8, OUTPUT);
+  pinMode(led9, OUTPUT);
+  pinMode(led10, OUTPUT);
+  pinMode(m1, OUTPUT);
+  pinMode(m2, OUTPUT);
+  pinMode(pir, INPUT);
+  pinMode(bled, OUTPUT);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  gasval = analogRead(gas);
+  pirval = digitalRead(pir);
+  tempval = analogRead(tempPin);
+  //temp loop:
+  float mv = ( tempval/1024.0)*5000; 
+  float cel = mv/10;
+  tempper = (cel-20)*10/(40-20); //tmax = 40 , tmin = 20
+  Serial.print("TEMPRATURE = ");
+  Serial.print(cel);
+  Serial.print("*C");
+  Serial.println();
+  Serial.println(tempper);
+  Serial.print("GAS ");
+  Serial.println(gasval);
+  Serial.print("PIR ");
+  Serial.println(pirval);
+  delay(500);
+
+  for(int i=2; i<=tempper+2; i++){
+    digitalWrite(i, HIGH);
+  }
+  for(int i=tempper+2; i<=11; i++){
+    digitalWrite(i, LOW);
+  }
+
+  //pir loop:
+  if(pirval == HIGH){
+    digitalWrite(bled, HIGH);
+    delay(200);
+    digitalWrite(bled, LOW);
+    delay(200);
+  }
+  else if(pirval == LOW){
+    digitalWrite(bled, LOW);
+  }
+
+  //smoke loop:
+  if(gasval>200){
+    analogWrite(m1, 255);
+    analogWrite(m2, 0);
+  }
+  else if(gas<200){
+    analogWrite(m1, 0);
+    analogWrite(m2, 0);
+  }
+    
+
+}

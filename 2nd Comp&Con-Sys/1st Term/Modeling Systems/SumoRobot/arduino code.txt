@@ -1,0 +1,143 @@
+#include <NewPing.h>
+
+NewPing sonar1(A2,A3,100); // NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); 
+
+
+
+int value1=0;
+//Motor Pin
+int MR1= 6;
+int MR2= 5;
+int ML1= 10;
+int ML2 =9; 
+
+int line_l=0;
+int line_r=0;
+int line_b=0;
+int found=0;
+unsigned long t; //to set the time from when the arduino began
+
+void setup()
+{
+  pinMode(A4, INPUT);//sense line L in the front
+  pinMode(A5, INPUT);//sense line R in the fron when black =1, when white =0
+  pinMode(2, INPUT);//sense line backward
+  pinMode(ML1, OUTPUT);   // sets the pin as output
+  pinMode(ML2, OUTPUT);
+  pinMode(MR1, OUTPUT);
+  pinMode(MR2, OUTPUT); 
+  robotstop();
+}
+
+void robotstop()
+{
+    analogWrite(MR1,0);
+    analogWrite(MR2,0); 
+    analogWrite(ML1,0);
+    analogWrite(ML2,0); 
+}
+
+void ir_find() //find opponent
+{
+  while (found==0)
+  {
+    analogWrite(MR1,150); //control the motor to rotate
+    analogWrite(MR2,0); 
+    analogWrite(ML1,0);
+    analogWrite(ML2,0); 
+    value1=sonar1.ping_cm(); //reading the u;trasonic
+    
+    //delay(50);
+   if ((value1>0))
+    {
+    //robotstop();
+    //delay(10);
+    found=1;
+    }
+   line_l=digitalRead(A4); //reading the IRs
+   line_r=digitalRead(A5);
+   line_b=digitalRead(2);  
+   if ((line_l==LOW)||(line_r==LOW)||line_b==LOW) //if any sensor sense white line
+    {
+      robotstop();
+      delay(10);
+      found=1;
+    }
+  }
+}
+
+
+
+void fight() //When found opponent
+{
+  value1=sonar1.ping_cm(); //double check opponent
+   
+  delay(50);
+  if ((value1>0))
+  {
+        analogWrite(MR1,255); //control the motor to go forward 
+        analogWrite(MR2,0); 
+        analogWrite(ML1,255);
+        analogWrite(ML2,0); 
+        delay(1);
+        found=1;  
+     }
+    else 
+    {
+        found=0; 
+    }
+}
+
+void sense_floor_black()
+{
+  line_l=digitalRead(A4);
+  line_r=digitalRead(A5);
+  line_b=digitalRead(2);  
+  if ((line_l==HIGH)&&(line_r==HIGH)&&(line_b==HIGH))//all black
+  {//ok, can find opponent / hit opponent
+      if (found==0)//search
+      {
+        ir_find();
+      }
+      else//found
+      {
+        fight();
+      }
+    }
+   else if ((line_l==LOW)||(line_r==LOW))//ALL WHITE
+   {
+    analogWrite(MR1,0); //forward or backward depending on the IRs
+    analogWrite(MR2,255); 
+    analogWrite(ML1,0);
+    analogWrite(ML2,255);
+    delay(900);
+    analogWrite(MR1,255);
+    analogWrite(MR2,0); 
+    analogWrite(ML1,0);
+    analogWrite(ML2,255);
+    delay(900);
+    robotstop();
+   }   
+   
+   else if(line_b==LOW){
+    analogWrite(MR1,255);
+    analogWrite(MR2,0); 
+    analogWrite(ML1,255);
+    analogWrite(ML2,0);
+    delay(900);
+    robotstop();
+   }
+}
+
+void loop() 
+{
+ t = millis(); //to calculate the time from when the arduino started 
+ if(t<=10000){
+  robotstop();
+ }
+ else{
+  sense_floor_black(); //for the robot to begin its goal
+  value1=sonar1.ping_cm();
+ }
+
+}
